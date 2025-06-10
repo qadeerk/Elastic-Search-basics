@@ -4,9 +4,14 @@
   "description": "Elasticsearch Basic Search Training materials with Docker and Node.js",
   "main": "scripts/loadDataset.js",
   "scripts": {
-
     "load-dataset": "node scripts/loadDataset.js",
     "clean-dataset": "node scripts/cleanDataset.js",
+    "start:server": "cd src/server && npm start",
+    "start:client": "cd src/client && npm run dev",
+    "dev:server": "cd src/server && npm run dev",
+    "dev:client": "cd src/client && npm run dev",
+    "install:all": "npm install && cd src/server && npm install && cd ../client && npm install",
+    "build:client": "cd src/client && npm run build",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [
@@ -15,7 +20,10 @@
     "docker",
     "search",
     "training",
-    "tmdb"
+    "tmdb",
+    "react",
+    "websocket",
+    "movie-search"
   ],
   "author": "Abdul Qadeer Khan",
   "license": "MIT",

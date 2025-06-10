@@ -13,8 +13,8 @@ This repository contains materials for Elasticsearch Basic Search Training on Wi
 
 2. **Pull Docker Images**  
    ```bash
-   docker pull docker.elastic.co/elasticsearch/elasticsearch:8.8.2
-   docker pull docker.elastic.co/kibana/kibana:8.8.2
+   docker pull docker.elastic.co/elasticsearch/elasticsearch:9.0.2
+   docker pull docker.elastic.co/kibana/kibana:9.0.2
    ```
 
 3. **Run Elasticsearch Container**  
@@ -22,14 +22,14 @@ This repository contains materials for Elasticsearch Basic Search Training on Wi
    docker run -d --name es01 -p 9200:9200 -p 9300:9300 \
      -e "discovery.type=single-node" \
      -e "xpack.security.enabled=false" \
-     docker.elastic.co/elasticsearch/elasticsearch:8.8.2
+     docker.elastic.co/elasticsearch/elasticsearch:9.0.2
    ```
 
 4. **Run Kibana Container**  
    ```bash
    docker run -d --name kib01 -p 5601:5601 \
      -e "ELASTICSEARCH_HOSTS=http://es01:9200" --network="container:es01" \
-     docker.elastic.co/kibana/kibana:8.8.2
+     docker.elastic.co/kibana/kibana:9.0.2
    ```
 
 5. **Verify**  
