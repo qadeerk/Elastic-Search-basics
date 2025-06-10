@@ -6,7 +6,7 @@ const datasets = [
   {
     name: 'TMDB Movies Dataset (Local)',
     size: '~45k+ movie records',
-    localPath: './scripts/downloaded_data/tmdb.json',
+    localPath: './scripts/data/tmdb.json',
     format: 'json',
     index: 'tmdb_movies'
   },
