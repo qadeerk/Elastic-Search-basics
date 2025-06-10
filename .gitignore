@@ -1,0 +1,33 @@
+# Dependencies
+node_modules/
+npm-debug.log*
+package-lock.json
+
+# Environment variables
+.env
+.env.local
+
+# Logs
+logs/
+*.log
+
+# Runtime data
+*.pid
+*.seed
+
+# Temporary folders
+tmp/
+temp/
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# Docker (if needed)
+.dockerignore 
