@@ -4,8 +4,9 @@
   "description": "Elasticsearch Basic Search Training materials with Docker and Node.js",
   "main": "scripts/loadDataset.js",
   "scripts": {
-    "load-data": "node scripts/load_tmdb.js",
+
     "load-dataset": "node scripts/loadDataset.js",
+    "clean-dataset": "node scripts/cleanDataset.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [
@@ -20,19 +21,19 @@
   "license": "MIT",
   "dependencies": {
     "@elastic/elasticsearch": "^8.8.2",
-    "inquirer": "^9.2.0",
+    "inquirer": "^8.2.6",
     "csvtojson": "^2.0.10",
-    "node-fetch": "^3.3.0"
+    "node-fetch": "^2.7.0"
   },
   "engines": {
-    "node": ">=14.0.0"
+    "node": ">=18.0.0"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/username/Elastic-Search-basics.git"
+    "url": "git+https://github.com/qadeerk/Elastic-Search-basics.git"
   },
   "bugs": {
-    "url": "https://github.com/username/Elastic-Search-basics/issues"
+    "url": "https://github.com/qadeerk/Elastic-Search-basics/issues"
   },
-  "homepage": "https://github.com/username/Elastic-Search-basics#readme"
+  "homepage": "https://github.com/qadeerk/Elastic-Search-basics#readme"
 } 

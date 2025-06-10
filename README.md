@@ -38,43 +38,72 @@ This repository contains materials for Elasticsearch Basic Search Training on Wi
 
 ---
 
-## Project Structure for Training Repository
+## 2. Dataset Management Scripts
+
+This repository includes comprehensive dataset management tools for loading and cleaning multiple datasets into Elasticsearch.
+
+### Available Scripts
+
+```bash
+npm run load-dataset     # Interactive dataset loader with multiple dataset options
+npm run clean-dataset    # Interactive dataset cleaner with safety confirmations
+```
+
+### Prerequisites for Dataset Scripts
+
+```bash
+npm install
+```
+
+---
+
+## 3. Project Structure for Training Repository
 
 ```
 elasticsearch_training_repo/
 ├── README.md
 ├── data/
 │   └── tmdb_movies.json
-└── scripts/
-    └── load_tmdb.js
+├── scripts/
+│   ├── datasets.js          # Centralized dataset configurations
+│   ├── loadDataset.js       # Interactive dataset loader
+│   ├── cleanDataset.js      # Interactive dataset cleaner
+│   └── load_tmdb.js         # Legacy TMDB loader
+└── package.json
 ```
 
 - **data/**: Contains datasets for ingestion.  
-- **scripts/**: Node.js scripts to load data into Elasticsearch.  
+- **scripts/**: Node.js scripts to load and manage data in Elasticsearch.  
+- **scripts/datasets.js**: Centralized dataset configurations used by both loader and cleaner.
 
 ---
 
-## Loading the TMDB Dataset into Elasticsearch
+## 4. Loading the TMDB Dataset into Elasticsearch
 
-1. **Prepare Data**  
-   - Place your TMDB JSON file in `data/tmdb_movies.json`.
-
-2. **Install Dependencies**  
+### Prerequisites
+1. **Installing Elasticsearch and Kibana via Docker on Windows** (See section 1 above)
+2. **Install Dependencies**
    ```bash
-   npm init -y
-   npm install @elastic/elasticsearch
+   npm install
    ```
 
-3. **Run Loader Script**  
+### Steps
+
+1. **Run Interactive Dataset Loader**
    ```bash
-   node scripts/load_tmdb.js
+   npm run load-dataset
    ```
 
-4. **Verify Data**  
-   In Kibana Dev Tools:
-   ```http
-   GET tmdb/_count
-   ```
+2. **Select Dataset**
+   - Select `TMDB Movies Dataset (Local) (~45k+ movie records)` and press Enter
+
+3. **Verify Data in Kibana**
+   - Go to http://localhost:5601/app/management/data/index_management/indices 
+   - Verify that `tmdb_movies` index is present
+
+4. **Access Kibana Dev Tools**
+   - Go to http://localhost:5601/app/dev_tools?#/console
+   - explore draftCourceContent.md
 
 ---
 
