@@ -1,7 +1,7 @@
 {
-  "name": "elasticsearch-basics",
+  "name": "elasticsearch-developer-tool",
   "version": "1.0.0",
-  "description": "Elasticsearch Basic Search Training materials with Docker and Node.js",
+  "description": "Elasticsearch Developer Tool with Search, Recommend, and Visualize capabilities",
   "main": "scripts/loadDataset.js",
   "scripts": {
     "load-dataset": "node scripts/loadDataset.js",
@@ -16,14 +16,18 @@
   },
   "keywords": [
     "elasticsearch",
+    "developer-tool",
+    "search",
+    "recommend",
+    "visualize",
+    "react",
+    "monaco-editor",
+    "tanstack",
+    "tailwind",
     "kibana",
     "docker",
-    "search",
     "training",
-    "tmdb",
-    "react",
-    "websocket",
-    "movie-search"
+    "tmdb"
   ],
   "author": "Abdul Qadeer Khan",
   "license": "MIT",

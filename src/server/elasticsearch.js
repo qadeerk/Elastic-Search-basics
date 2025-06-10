@@ -12,6 +12,187 @@ class ElasticsearchService {
     this.index = 'tmdb_movies';
   }
 
+  // Get all available indices/datasets
+  async getIndices() {
+    try {
+      const response = await this.client.cat.indices({ format: 'json' });
+      const indices = response?.body || response;
+      
+      return indices
+        .filter(index => !index.index.startsWith('.')) // Filter out system indices
+        .map(index => ({
+          name: index.index,
+          health: index.health,
+          status: index.status,
+          docsCount: parseInt(index['docs.count']) || 0,
+          storeSize: index['store.size']
+        }));
+    } catch (error) {
+      console.error('Error fetching indices:', error);
+      throw new Error('Failed to fetch datasets');
+    }
+  }
+
+  // Get mapping for a specific dataset
+  async getMapping(indexName) {
+    try {
+      const response = await this.client.indices.getMapping({ index: indexName });
+      const mapping = response?.body?.[indexName] || response?.[indexName];
+      return mapping;
+    } catch (error) {
+      console.error(`Error fetching mapping for ${indexName}:`, error);
+      throw new Error(`Failed to fetch mapping for ${indexName}`);
+    }
+  }
+
+  // Execute raw Elasticsearch query
+  async executeQuery(indexName, query, size = 10) {
+    try {
+      let searchBody;
+      
+      // Handle different query formats
+      if (typeof query === 'string') {
+        try {
+          searchBody = JSON.parse(query);
+        } catch {
+          // If not valid JSON, treat as simple text search
+          searchBody = {
+            size,
+            query: {
+              multi_match: {
+                query,
+                fields: ['*'],
+                fuzziness: 'AUTO'
+              }
+            }
+          };
+        }
+      } else {
+        searchBody = query;
+      }
+
+      const response = await this.client.search({
+        index: indexName,
+        body: searchBody
+      });
+
+      const hits = response?.body?.hits || response?.hits;
+      return {
+        total: hits?.total?.value || hits?.total || 0,
+        hits: hits?.hits || [],
+        took: response?.body?.took || response?.took,
+        aggregations: response?.body?.aggregations || response?.aggregations
+      };
+    } catch (error) {
+      console.error('Error executing query:', error);
+      throw new Error(`Query execution failed: ${error.message}`);
+    }
+  }
+
+  // Get recommendations based on a query or document
+  async getRecommendations(indexName, query, size = 5) {
+    try {
+      let recommendationQuery;
+
+      if (typeof query === 'string') {
+        // Simple text-based recommendations
+        recommendationQuery = {
+          size,
+          query: {
+            more_like_this: {
+              fields: ['*'],
+              like: query,
+              min_term_freq: 1,
+              min_doc_freq: 1
+            }
+          }
+        };
+      } else if (query.document_id) {
+        // Document-based recommendations
+        recommendationQuery = {
+          size,
+          query: {
+            more_like_this: {
+              fields: ['*'],
+              like: [
+                {
+                  _index: indexName,
+                  _id: query.document_id
+                }
+              ],
+              min_term_freq: 1,
+              min_doc_freq: 1
+            }
+          }
+        };
+      } else {
+        // Use the provided query as-is
+        recommendationQuery = query;
+      }
+
+      const response = await this.client.search({
+        index: indexName,
+        body: recommendationQuery
+      });
+
+      const hits = response?.body?.hits || response?.hits;
+      return {
+        total: hits?.total?.value || hits?.total || 0,
+        recommendations: hits?.hits || []
+      };
+    } catch (error) {
+      console.error('Error getting recommendations:', error);
+      throw new Error(`Recommendations failed: ${error.message}`);
+    }
+  }
+
+  // Get aggregation data for visualizations
+  async getVisualizationData(indexName, query) {
+    try {
+      let visualQuery;
+
+      if (typeof query === 'string') {
+        try {
+          visualQuery = JSON.parse(query);
+        } catch {
+          // Default aggregation query for text search
+          visualQuery = {
+            size: 0,
+            query: {
+              match_all: {}
+            },
+            aggs: {
+              field_stats: {
+                stats: {
+                  field: '*'
+                }
+              },
+              top_terms: {
+                terms: {
+                  field: 'keywords.keyword',
+                  size: 10
+                }
+              }
+            }
+          };
+        }
+      } else {
+        visualQuery = query;
+      }
+
+      const response = await this.client.search({
+        index: indexName,
+        body: visualQuery
+      });
+
+      return response?.body?.aggregations || response?.aggregations || {};
+    } catch (error) {
+      console.error('Error getting visualization data:', error);
+      throw new Error(`Visualization data retrieval failed: ${error.message}`);
+    }
+  }
+
+  // Legacy movie search methods (keep for backward compatibility)
   async searchMovies(query, size = 10) {
     try {
       const searchQuery = {
@@ -61,7 +242,6 @@ class ElasticsearchService {
       };
 
       const response = await this.client.search(searchQuery);
-      // Handle both old and new response formats
       const hits = response?.body?.hits?.hits || response?.hits?.hits || [];
       return this.formatSearchResults(hits);
     } catch (error) {
@@ -92,7 +272,6 @@ class ElasticsearchService {
       };
 
       const response = await this.client.search(topMoviesQuery);
-      // Handle both old and new response formats - this is the fix for the error
       const hits = response?.body?.hits?.hits || response?.hits?.hits || [];
       
       if (!hits || hits.length === 0) {
@@ -125,7 +304,7 @@ class ElasticsearchService {
       vote_count: hit._source.vote_count,
       popularity: hit._source.popularity,
       genres: hit._source.genres,
-      cast: hit._source.cast?.slice(0, 5), // Top 5 cast members
+      cast: hit._source.cast?.slice(0, 5),
       directors: hit._source.directors,
       runtime: hit._source.runtime,
       tagline: hit._source.tagline,
@@ -136,7 +315,6 @@ class ElasticsearchService {
   async testConnection() {
     try {
       const health = await this.client.cluster.health();
-      // Handle both old and new response formats
       const status = health?.body?.status || health?.status || 'unknown';
       console.log('Elasticsearch connection successful:', status);
       return true;

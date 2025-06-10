@@ -4,7 +4,7 @@ import cors from 'cors';
 import { createServer } from 'http';
 import ElasticsearchService from './elasticsearch.js';
 
-class MovieSearchServer {
+class ElasticsearchDevTool {
   constructor() {
     this.app = express();
     this.server = createServer(this.app);
@@ -24,14 +24,92 @@ class MovieSearchServer {
   }
 
   setupRoutes() {
+    // Health check
     this.app.get('/health', (req, res) => {
       res.json({ status: 'ok', timestamp: new Date().toISOString() });
     });
 
+    // Elasticsearch connection test
     this.app.get('/api/test-elasticsearch', async (req, res) => {
       try {
         const isConnected = await this.elasticsearchService.testConnection();
         res.json({ connected: isConnected });
+      } catch (error) {
+        res.status(500).json({ error: error.message });
+      }
+    });
+
+    // Get all available indices/datasets
+    this.app.get('/api/datasets', async (req, res) => {
+      try {
+        const indices = await this.elasticsearchService.getIndices();
+        res.json({ datasets: indices });
+      } catch (error) {
+        res.status(500).json({ error: error.message });
+      }
+    });
+
+    // Get mapping for a specific dataset
+    this.app.get('/api/datasets/:dataset/mapping', async (req, res) => {
+      try {
+        const { dataset } = req.params;
+        const mapping = await this.elasticsearchService.getMapping(dataset);
+        res.json({ mapping });
+      } catch (error) {
+        res.status(500).json({ error: error.message });
+      }
+    });
+
+    // Execute search query
+    this.app.post('/api/search', async (req, res) => {
+      try {
+        const { dataset, query, size = 10 } = req.body;
+        const results = await this.elasticsearchService.executeQuery(dataset, query, size);
+        res.json({ results });
+      } catch (error) {
+        res.status(500).json({ error: error.message });
+      }
+    });
+
+    // Get recommendations based on query
+    this.app.post('/api/recommend', async (req, res) => {
+      try {
+        const { dataset, query, size = 5 } = req.body;
+        const recommendations = await this.elasticsearchService.getRecommendations(dataset, query, size);
+        res.json({ recommendations });
+      } catch (error) {
+        res.status(500).json({ error: error.message });
+      }
+    });
+
+    // Get aggregation data for visualization
+    this.app.post('/api/visualize', async (req, res) => {
+      try {
+        const { dataset, query } = req.body;
+        const visualizationData = await this.elasticsearchService.getVisualizationData(dataset, query);
+        res.json({ data: visualizationData });
+      } catch (error) {
+        res.status(500).json({ error: error.message });
+      }
+    });
+
+    // Save query
+    this.app.post('/api/queries', async (req, res) => {
+      try {
+        const { name, dataset, query, type } = req.body;
+        // In a real implementation, you'd save to a database
+        // For now, we'll just acknowledge the save
+        res.json({ success: true, id: Date.now().toString() });
+      } catch (error) {
+        res.status(500).json({ error: error.message });
+      }
+    });
+
+    // Get saved queries
+    this.app.get('/api/queries', async (req, res) => {
+      try {
+        // In a real implementation, you'd fetch from a database
+        res.json({ queries: [] });
       } catch (error) {
         res.status(500).json({ error: error.message });
       }
@@ -59,9 +137,6 @@ class MovieSearchServer {
       ws.on('error', (error) => {
         console.error('WebSocket error:', error);
       });
-
-      // Send initial recommendations
-      this.sendTopMovies(ws);
     });
   }
 
@@ -150,9 +225,9 @@ class MovieSearchServer {
       }
 
       this.server.listen(this.port, () => {
-        console.log(`🚀 Movie Search Server running on port ${this.port}`);
+        console.log(`🚀 Elasticsearch Developer Tool Server running on port ${this.port}`);
         console.log(`📡 WebSocket endpoint: ws://localhost:${this.port}`);
-        console.log(`🔍 Elasticsearch index: tmdb_movies`);
+        console.log(`🔍 API endpoints available at: http://localhost:${this.port}/api`);
         console.log(`📊 Health check: http://localhost:${this.port}/health`);
       });
     } catch (error) {
@@ -174,5 +249,5 @@ process.on('SIGTERM', () => {
 });
 
 // Start the server
-const server = new MovieSearchServer();
+const server = new ElasticsearchDevTool();
 server.start(); 
