@@ -82,6 +82,35 @@ class ElasticsearchDevTool {
       }
     });
 
+    // Get field-based autocomplete suggestions
+    this.app.post('/api/suggest', async (req, res) => {
+      try {
+        const { dataset, fieldName, query, size = 8 } = req.body;
+        
+        if (!dataset) {
+          return res.status(400).json({ error: 'Dataset is required' });
+        }
+        
+        if (!query || query.trim().length === 0) {
+          return res.json({ suggestions: [] });
+        }
+
+        let suggestions;
+        if (fieldName && fieldName !== 'general') {
+          // Field-specific suggestions
+          suggestions = await this.elasticsearchService.getFieldSuggestions(dataset, fieldName, query, size);
+        } else {
+          // General suggestions (fallback)
+          suggestions = await this.elasticsearchService.getGeneralSuggestions(dataset, query, size);
+        }
+        
+        res.json({ suggestions });
+      } catch (error) {
+        console.error('Suggestion error:', error);
+        res.status(500).json({ error: error.message });
+      }
+    });
+
     // Get aggregation data for visualization
     this.app.post('/api/visualize', async (req, res) => {
       try {
@@ -113,6 +142,117 @@ class ElasticsearchDevTool {
       } catch (error) {
         res.status(500).json({ error: error.message });
       }
+    });
+
+    // Get dataset details (count, etc.)
+    this.app.get('/api/datasets/:dataset/details', async (req, res) => {
+      try {
+        const { dataset } = req.params;
+        const details = await this.elasticsearchService.getDatasetDetails(dataset);
+        res.json({ details });
+      } catch (error) {
+        res.status(500).json({ error: error.message });
+      }
+    });
+
+    // Get all tile mappings
+    this.app.get('/api/tile-mappings', async (req, res) => {
+      try {
+        // In a real implementation, you'd fetch from a database
+        // For now, return predefined mappings
+        const tileMappings = {
+          tmdb_movies: {
+            title: 'title',
+            subtitle: 'tagline',
+            image: 'poster_path',
+            description: 'overview',
+            metadata: ['release_date', 'vote_average', 'runtime'],
+            genres: 'genres.name',
+            cast: 'cast.name'
+          }
+        };
+        res.json({ mappings: tileMappings });
+      } catch (error) {
+        res.status(500).json({ error: error.message });
+      }
+    });
+
+    // Get tile mapping for specific dataset
+    this.app.get('/api/tile-mappings/:dataset', async (req, res) => {
+      try {
+        const { dataset } = req.params;
+        // In a real implementation, you'd fetch from a database
+        // For now, return predefined mapping for tmdb_movies
+        if (dataset === 'tmdb_movies') {
+          const mapping = {
+            title: 'title',
+            subtitle: 'tagline',
+            image: 'poster_path',
+            description: 'overview',
+            metadata: ['release_date', 'vote_average', 'runtime'],
+            genres: 'genres.name',
+            cast: 'cast.name'
+          };
+          res.json({ mapping });
+        } else {
+          res.json({ mapping: null });
+        }
+      } catch (error) {
+        res.status(500).json({ error: error.message });
+      }
+    });
+
+    // Save tile mapping for dataset
+    this.app.post('/api/tile-mappings/:dataset', async (req, res) => {
+      try {
+        const { dataset } = req.params;
+        const { mapping } = req.body;
+        
+        // In a real implementation, you'd save to a database
+        // For now, just acknowledge the save
+        console.log(`Saving tile mapping for ${dataset}:`, mapping);
+        
+        res.json({ success: true, dataset, mapping });
+      } catch (error) {
+        res.status(500).json({ error: error.message });
+      }
+    });
+
+    // Placeholder endpoint for image handling
+    this.app.get('/api/placeholder/:width/:height', (req, res) => {
+      const { width, height } = req.params;
+      const w = Math.min(Math.max(parseInt(width) || 300, 50), 1000);
+      const h = Math.min(Math.max(parseInt(height) || 450, 50), 1000);
+      
+      // Return a more attractive SVG placeholder
+      const svg = `
+        <svg width="${w}" height="${h}" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${w} ${h}">
+          <defs>
+            <pattern id="grid" width="20" height="20" patternUnits="userSpaceOnUse">
+              <path d="M 20 0 L 0 0 0 20" fill="none" stroke="#f1f5f9" stroke-width="1"/>
+            </pattern>
+          </defs>
+          <rect width="100%" height="100%" fill="#f8fafc"/>
+          <rect width="100%" height="100%" fill="url(#grid)"/>
+          <circle cx="${w/2}" cy="${h/2 - 20}" r="30" fill="#cbd5e1"/>
+          <path d="M${w/2 - 20} ${h/2 - 25} L${w/2 + 20} ${h/2 - 25} L${w/2 + 15} ${h/2 - 15} L${w/2 - 15} ${h/2 - 15} Z" fill="#94a3b8"/>
+          <text x="50%" y="${h/2 + 20}" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" fill="#64748b">
+            ${w} × ${h}
+          </text>
+          <text x="50%" y="${h/2 + 40}" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#94a3b8">
+            No Image Available
+          </text>
+        </svg>
+      `;
+      
+      res.setHeader('Content-Type', 'image/svg+xml');
+      res.setHeader('Cache-Control', 'public, max-age=86400'); // Cache for 24 hours
+      res.send(svg.trim());
+    });
+
+    // Fallback endpoint for any missing images
+    this.app.get('/api/placeholder', (req, res) => {
+      res.redirect('/api/placeholder/300/450');
     });
   }
 

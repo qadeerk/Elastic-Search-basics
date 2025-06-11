@@ -227,6 +227,200 @@
   .monaco-editor .suggest-widget .monaco-list .monaco-list-row.focused {
     @apply !bg-blue-50 !text-blue-900;
   }
+
+  /* Tile component styles */
+  .tile-card {
+    @apply bg-white rounded-lg shadow-sm border border-slate-200 overflow-hidden hover:shadow-md transition-shadow duration-200;
+  }
+
+  .tile-header {
+    @apply relative;
+  }
+
+  .tile-image-container {
+    @apply relative w-full aspect-[2/3] bg-slate-100;
+  }
+
+  .tile-image {
+    @apply w-full h-full object-cover;
+  }
+
+  .tile-placeholder {
+    @apply w-full h-full flex flex-col items-center justify-center bg-slate-100 text-slate-400;
+  }
+
+  .tile-loading-overlay {
+    @apply absolute inset-0 flex items-center justify-center bg-slate-100;
+  }
+
+  .tile-score {
+    @apply absolute top-2 right-2 flex items-center space-x-1 bg-black/75 text-white px-2 py-1 rounded-full text-xs;
+  }
+
+  .tile-content {
+    @apply p-4 space-y-3;
+  }
+
+  .tile-title-section {
+    @apply space-y-1;
+  }
+
+  .tile-title {
+    @apply font-semibold text-slate-900 text-sm leading-tight;
+  }
+
+  .tile-subtitle {
+    @apply text-xs text-slate-600 truncate-2;
+  }
+
+  .tile-metadata {
+    @apply flex flex-wrap gap-2;
+  }
+
+  .metadata-item {
+    @apply flex items-center space-x-1 text-slate-500;
+  }
+
+  .tile-genres {
+    @apply flex flex-wrap gap-1;
+  }
+
+  .genre-tag {
+    @apply px-2 py-1 bg-blue-100 text-blue-700 text-xs rounded-full;
+  }
+
+  .tile-description {
+    @apply text-xs text-slate-600 leading-relaxed;
+  }
+
+  .tile-cast {
+    @apply flex items-center space-x-1 text-slate-500;
+  }
+
+  .tile-highlights {
+    @apply p-2 bg-blue-50 rounded border border-blue-200;
+  }
+
+  .highlight-item {
+    @apply text-xs;
+  }
+
+  /* Tiles grid layout */
+  .tiles-grid {
+    @apply grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4;
+  }
+
+  /* Closable tips styles */
+  .closable-tip {
+    @apply relative bg-blue-50 border border-blue-200 rounded-lg p-4;
+  }
+
+  .tip-close-btn {
+    @apply absolute top-2 right-2 p-1 text-blue-500 hover:text-blue-700 hover:bg-blue-100 rounded;
+  }
+
+  .tip-content {
+    @apply text-xs text-blue-800;
+  }
+
+  .tip-title {
+    @apply font-medium text-blue-900 mb-2;
+  }
+
+  /* Search input with autocomplete */
+  .search-input-container {
+    @apply relative;
+  }
+
+  .search-suggestions {
+    @apply absolute top-full left-0 right-0 bg-white border border-slate-200 rounded-b-md shadow-lg z-10 max-h-48 overflow-y-auto;
+  }
+
+  .search-suggestion {
+    @apply px-3 py-2 text-sm text-slate-700 hover:bg-slate-50 cursor-pointer;
+  }
+
+  .search-suggestion.active {
+    @apply bg-blue-50 text-blue-700;
+  }
+
+  /* Enhanced tab styles for results */
+  .results-tabs {
+    @apply flex border-b border-slate-200 bg-slate-50;
+  }
+
+  .results-tab {
+    @apply px-4 py-3 text-sm font-medium text-slate-600 border-b-2 border-transparent 
+           hover:text-slate-900 hover:border-slate-300 transition-colors cursor-pointer;
+  }
+
+  .results-tab.active {
+    @apply text-blue-600 border-blue-600 bg-white;
+  }
+
+  /* Settings button styles */
+  .settings-btn {
+    @apply p-2 text-slate-500 hover:text-slate-700 hover:bg-slate-100 rounded-md transition-colors;
+  }
+
+  /* Modal enhancements for tile mapping */
+  .mapping-field-group {
+    @apply space-y-4 p-4 bg-slate-50 rounded-lg;
+  }
+
+  .inline-edit-field {
+    @apply flex items-center space-x-2 p-2 bg-white border border-slate-200 rounded-md hover:border-slate-300 cursor-pointer;
+  }
+
+  .inline-edit-field.editing {
+    @apply border-blue-500 ring-2 ring-blue-200;
+  }
+
+  .field-suggestions {
+    @apply mt-2 p-2 bg-yellow-50 border border-yellow-200 rounded text-xs;
+  }
+
+  /* Autocomplete search enhancements */
+  .autocomplete-container {
+    @apply relative;
+  }
+
+  .autocomplete-input {
+    @apply w-full px-4 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent;
+  }
+
+  .autocomplete-dropdown {
+    @apply absolute top-full left-0 right-0 bg-white border border-slate-200 rounded-b-md shadow-lg z-20 max-h-60 overflow-y-auto;
+  }
+
+  .autocomplete-item {
+    @apply px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 cursor-pointer flex items-center justify-between;
+  }
+
+  .autocomplete-item.highlighted {
+    @apply bg-blue-50 text-blue-700;
+  }
+
+  .autocomplete-count {
+    @apply text-xs text-slate-500;
+  }
+
+  /* Empty state improvements */
+  .empty-state {
+    @apply text-center py-12 text-slate-500;
+  }
+
+  .empty-state-icon {
+    @apply w-12 h-12 text-slate-300 mx-auto mb-3;
+  }
+
+  .empty-state-title {
+    @apply text-lg font-medium;
+  }
+
+  .empty-state-description {
+    @apply text-sm mt-1;
+  }
 }
 
 /* Keyframe animations */

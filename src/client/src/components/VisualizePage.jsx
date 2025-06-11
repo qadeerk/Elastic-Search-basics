@@ -1,9 +1,57 @@
-import React, { useState, useMemo } from 'react';
-import { BarChart3, Play, Save, Clock, AlertCircle, Info, Table } from 'lucide-react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
+import { BarChart3, Play, Save, Clock, AlertCircle, Info, Table, X } from 'lucide-react';
 import DatasetSelector from './DatasetSelector';
 import QueryEditor from './QueryEditor';
 import { useDataset } from '../context/DatasetContext';
 import { useApi } from '../context/ApiContext';
+
+// Resizable Panel Hook
+const useResizable = (initialWidth = 50) => {
+  const [width, setWidth] = useState(initialWidth);
+  const [isResizing, setIsResizing] = useState(false);
+  const resizerRef = useRef(null);
+
+  useEffect(() => {
+    const handleMouseMove = (e) => {
+      if (!isResizing) return;
+      
+      const containerWidth = window.innerWidth;
+      const newWidth = (e.clientX / containerWidth) * 100;
+      
+      // Constrain between 20% and 80%
+      if (newWidth >= 20 && newWidth <= 80) {
+        setWidth(newWidth);
+      }
+    };
+
+    const handleMouseUp = () => {
+      setIsResizing(false);
+    };
+
+    if (isResizing) {
+      document.addEventListener('mousemove', handleMouseMove);
+      document.addEventListener('mouseup', handleMouseUp);
+      document.body.style.cursor = 'col-resize';
+      document.body.style.userSelect = 'none';
+    } else {
+      document.body.style.cursor = '';
+      document.body.style.userSelect = '';
+    }
+
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+      document.body.style.cursor = '';
+      document.body.style.userSelect = '';
+    };
+  }, [isResizing]);
+
+  const handleMouseDown = () => {
+    setIsResizing(true);
+  };
+
+  return { width, handleMouseDown, resizerRef };
+};
 
 const VisualizePage = () => {
   const [query, setQuery] = useState('{\n  "size": 0,\n  "aggs": {\n    "top_categories": {\n      "terms": {\n        "field": "category.keyword",\n        "size": 10\n      }\n    },\n    "value_stats": {\n      "stats": {\n        "field": "value"\n      }\n    }\n  }\n}');
@@ -11,9 +59,13 @@ const VisualizePage = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [executionTime, setExecutionTime] = useState(null);
+  const [showTips, setShowTips] = useState(true);
 
   const { currentDataset } = useDataset();
   const api = useApi();
+  
+  // Resizable panels hook
+  const { width: leftPanelWidth, handleMouseDown } = useResizable(50);
 
   const executeVisualization = async () => {
     if (!currentDataset) {
@@ -182,7 +234,10 @@ const VisualizePage = () => {
     <div className="dev-tool-layout">
       <div className="dev-tool-content">
         {/* Left Panel - Visualization Query */}
-        <div className="dev-panel">
+        <div 
+          className="bg-white border-r border-slate-200 flex flex-col"
+          style={{ width: `${leftPanelWidth}%` }}
+        >
           <div className="panel-header">
             <div className="flex items-center space-x-2">
               <BarChart3 className="w-5 h-5 text-slate-600" />
@@ -192,25 +247,32 @@ const VisualizePage = () => {
           </div>
           
           <div className="panel-content space-y-4">
-            {/* Tips */}
-            <div className="info-alert">
-              <Info className="w-4 h-4 mr-2 flex-shrink-0" />
-              <div className="text-xs">
-                <p className="font-medium">Visualization Tips:</p>
-                <ul className="mt-1 space-y-1">
-                  <li>• Use "size": 0 to skip document results and focus on aggregations</li>
-                  <li>• Terms aggregation for categorical data</li>
-                  <li>• Date histogram for time-series data</li>
-                  <li>• Stats aggregation for numerical summaries</li>
-                </ul>
+            {/* Tips - Closable */}
+            {showTips && (
+              <div className="closable-tip">
                 <button
-                  onClick={loadSampleQueries}
-                  className="mt-2 text-xs text-blue-600 hover:text-blue-800 underline"
+                  onClick={() => setShowTips(false)}
+                  className="tip-close-btn"
                 >
-                  Load sample queries →
+                  <X className="w-4 h-4" />
                 </button>
+                <div className="tip-content">
+                  <p className="tip-title">Visualization Tips:</p>
+                  <ul className="space-y-1">
+                    <li>• Use "size": 0 to skip document results and focus on aggregations</li>
+                    <li>• Terms aggregation for categorical data</li>
+                    <li>• Date histogram for time-series data</li>
+                    <li>• Stats aggregation for numerical summaries</li>
+                  </ul>
+                  <button
+                    onClick={loadSampleQueries}
+                    className="mt-2 text-xs text-blue-600 hover:text-blue-800 underline"
+                  >
+                    Load sample queries →
+                  </button>
+                </div>
               </div>
-            </div>
+            )}
 
             {/* Query Editor */}
             <div>
@@ -266,8 +328,17 @@ const VisualizePage = () => {
           </div>
         </div>
 
+        {/* Resizer */}
+        <div
+          className="w-1 bg-slate-200 hover:bg-slate-300 cursor-col-resize flex-shrink-0 transition-colors"
+          onMouseDown={handleMouseDown}
+        ></div>
+
         {/* Right Panel - Visualizations */}
-        <div className="output-panel">
+        <div 
+          className="bg-slate-50 flex flex-col"
+          style={{ width: `${100 - leftPanelWidth}%` }}
+        >
           <div className="panel-header">
             <div className="flex items-center space-x-2">
               <Table className="w-5 h-5 text-slate-600" />

@@ -62,12 +62,38 @@ export const ApiProvider = ({ children }) => {
     });
   }, [apiCall]);
 
+  const getSuggestions = useCallback(async (dataset, fieldName, query, size = 8) => {
+    return await apiCall('/suggest', {
+      method: 'POST',
+      body: JSON.stringify({ dataset, fieldName, query, size }),
+    });
+  }, [apiCall]);
+
   const getSavedQueries = useCallback(async () => {
     return await apiCall('/queries');
   }, [apiCall]);
 
   const testConnection = useCallback(async () => {
     return await apiCall('/test-elasticsearch');
+  }, [apiCall]);
+
+  const getTileMappings = useCallback(async () => {
+    return await apiCall('/tile-mappings');
+  }, [apiCall]);
+
+  const getTileMapping = useCallback(async (dataset) => {
+    return await apiCall(`/tile-mappings/${dataset}`);
+  }, [apiCall]);
+
+  const saveTileMapping = useCallback(async (dataset, mapping) => {
+    return await apiCall(`/tile-mappings/${dataset}`, {
+      method: 'POST',
+      body: JSON.stringify({ mapping }),
+    });
+  }, [apiCall]);
+
+  const getDatasetDetails = useCallback(async (dataset) => {
+    return await apiCall(`/datasets/${dataset}/details`);
   }, [apiCall]);
 
   const value = {
@@ -77,8 +103,13 @@ export const ApiProvider = ({ children }) => {
     getRecommendations,
     getVisualizationData,
     saveQuery,
+    getSuggestions,
     getSavedQueries,
     testConnection,
+    getTileMappings,
+    getTileMapping,
+    saveTileMapping,
+    getDatasetDetails,
   };
 
   return <ApiContext.Provider value={value}>{children}</ApiContext.Provider>;
