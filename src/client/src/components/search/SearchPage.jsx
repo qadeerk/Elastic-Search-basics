@@ -1,13 +1,14 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Play, Clock, AlertCircle, Database, FileText, Settings, X, Grid, Code, ChevronDown, ChevronRight, Search, TreePine, Copy, CheckCircle, Plus, Minus, Calendar } from 'lucide-react';
-import DatasetSelector from './DatasetSelector';
-import QueryEditor from './QueryEditor';
-import AutocompleteSearch from './AutocompleteSearch';
-import TileComponent from './TileComponent';
-import DatasetSettingsModal from './DatasetSettingsModal';
-import { useDataset } from '../context/DatasetContext';
-import { useApi } from '../context/ApiContext';
-import { useUIState } from '../hooks/useUIState';
+import DatasetSelector from '../DatasetSelector';
+import QueryEditor from '../QueryEditor';
+import AutocompleteSearch from '../AutocompleteSearch';
+import TileComponent from '../TileComponent';
+import DatasetSettingsModal from '../DatasetSettingsModal';
+import ExampleSelector from './ExampleSelector';
+import { useDataset } from '../../context/DatasetContext';
+import { useApi } from '../../context/ApiContext';
+import { useUIState } from '../../hooks/useUIState';
 
 // Resizable Panel Hook
 const useResizable = (initialWidth = 50) => {
@@ -163,7 +164,7 @@ const extractVariables = (queryString) => {
   });
 };
 
-// Dynamic Variable Input Component - Updated to handle any variable names
+// Dynamic Variable Input Component - Updated to handle any variable names and disable autocomplete
 const DynamicVariableInputs = ({ 
   variables, 
   variableValues, 
@@ -171,7 +172,8 @@ const DynamicVariableInputs = ({
   onSearch, 
   loading, 
   disabled,
-  autocompleteVariables = ['searchTerm'] // Which variables should have autocomplete
+  autocompleteVariables = [], // Disabled by default
+  variableHints = {} // Add hints from examples
 }) => {
   if (variables.length === 0) return null;
 
@@ -211,6 +213,11 @@ const DynamicVariableInputs = ({
 
   // Helper function to get readable placeholder
   const getPlaceholder = (variableName) => {
+    // Use hint from examples if available
+    if (variableHints[variableName]) {
+      return variableHints[variableName];
+    }
+    
     // Convert variable name to readable format
     const readable = variableName
       .replace(/([A-Z])/g, ' $1') // Add space before capital letters
@@ -240,65 +247,63 @@ const DynamicVariableInputs = ({
   };
 
   return (
-    <div className="space-y-3">
-      <label className="block text-sm font-medium text-slate-700">
-        Query Variables
-      </label>
-      <div className="space-y-3">
-        {variables.map((variableName) => {
-          const hasAutocomplete = autocompleteVariables.includes(variableName);
-          const isDateField = variableName.toLowerCase().startsWith('date:') || 
-                             variableName.toLowerCase().includes('date');
-          const fieldName = extractFieldName(variableName);
-          
-          return (
-            <div key={variableName} className="space-y-1">
+    <div className="space-y-2">
+      {variables.map((variableName) => {
+        const hasAutocomplete = autocompleteVariables.includes(variableName);
+        const isDateField = variableName.toLowerCase().startsWith('date:') || 
+                           variableName.toLowerCase().includes('date');
+        const fieldName = extractFieldName(variableName);
+        
+        return (
+          <div key={variableName} className="space-y-1">
+            {!(hasAutocomplete || fieldName) && (
               <label className="block text-xs font-medium text-slate-600">
                 {variableName}
               </label>
-              
-              {hasAutocomplete || fieldName ? (
-                // Use AutocompleteSearch for variables with autocomplete or detected field names
-                <AutocompleteSearch
-                  onSearch={(value) => {
-                    onVariableChange(variableName, value);
-                    if (onSearch && variableName === 'searchTerm') onSearch(value);
-                  }}
-                  searchTerm={variableValues[variableName] || ''}
-                  setSearchTerm={(value) => onVariableChange(variableName, value)}
+            )}
+            
+            {hasAutocomplete || fieldName ? (
+              // Use AutocompleteSearch for variables with autocomplete or detected field names
+              <AutocompleteSearch
+                onSearch={(value) => {
+                  onVariableChange(variableName, value);
+                  if (onSearch && variableName === 'searchTerm') onSearch(value);
+                }}
+                searchTerm={variableValues[variableName] || ''}
+                setSearchTerm={(value) => onVariableChange(variableName, value)}
+                disabled={loading || disabled}
+                fieldName={fieldName}
+                variableName={variableName}
+              />
+            ) : (
+              // Use input with clickable calendar icon for date fields, regular input for others
+              <div className="relative">
+                <input
+                  type="text"
+                  value={variableValues[variableName] || ''}
+                  onChange={(e) => onVariableChange(variableName, e.target.value)}
+                  placeholder={getPlaceholder(variableName)}
                   disabled={loading || disabled}
-                  fieldName={fieldName}
-                  variableName={variableName}
+                  autoComplete="off"
+                  className={`w-full px-3 py-2 border border-slate-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                    isDateField ? 'pr-8' : ''
+                  }`}
                 />
-              ) : (
-                // Use input with clickable calendar icon for date fields, regular input for others
-                <div className="relative">
-                  <input
-                    type="text"
-                    value={variableValues[variableName] || ''}
-                    onChange={(e) => onVariableChange(variableName, e.target.value)}
-                    placeholder={getPlaceholder(variableName)}
-                    disabled={loading || disabled}
-                    className={`w-full px-3 py-2 border border-slate-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                      isDateField ? 'pr-8' : ''
-                    }`}
-                  />
-                  {isDateField && (
-                    <button
-                      type="button"
-                      onClick={() => handleDateClick(variableName)}
-                      className="absolute inset-y-0 right-0 pr-3 flex items-center hover:bg-slate-50 rounded-r-md transition-colors"
-                      title="Open calendar"
-                    >
-                      <Calendar className="w-4 h-4 text-slate-400 hover:text-slate-600" />
-                    </button>
-                  )}
-                </div>
-              )}
-            </div>
-          );
-        })}
-      </div>
+                {isDateField && (
+                  <button
+                    type="button"
+                    onClick={() => handleDateClick(variableName)}
+                    className="absolute inset-y-0 right-0 pr-3 flex items-center hover:bg-slate-50 rounded-r-md transition-colors"
+                    title="Open calendar"
+                  >
+                    <Calendar className="w-4 h-4 text-slate-400 hover:text-slate-600" />
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
+        );
+      })}
     </div>
   );
 };
@@ -336,6 +341,7 @@ const ensureDefaultSize = (queryString, defaultSize = 10) => {
 const SearchPage = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [variableValues, setVariableValues] = useState({});
+  const [variableHints, setVariableHints] = useState({});
   const [dynamicVariables, setDynamicVariables] = useState([]);
   const [query, setQuery] = useState('{\n  "query": {\n    "bool": {\n      "must": [\n        {\n          "match": {\n            "title": "{{searchTerm}}"\n          }\n        }\n      ],\n      "filter": [\n        {\n          "term": {\n            "category": "{{category}}"\n          }\n        },\n        {\n          "range": {\n            "created_date": {\n              "gte": "{{date:startDate}}",\n              "lte": "{{date:endDate}}"\n            }\n          }\n        },\n        {\n          "range": {\n            "updated_at": {\n              "gte": "{{lastModified}}"\n            }\n          }\n        }\n      ]\n    }\n  },\n  "size": 10\n}');
   const [results, setResults] = useState(null);
@@ -344,6 +350,7 @@ const SearchPage = () => {
   const [executionTime, setExecutionTime] = useState(null);
   const [showSettings, setShowSettings] = useState(false);
   const [executedQuery, setExecutedQuery] = useState(null);
+  const [selectedExample, setSelectedExample] = useState(null);
 
   const { currentDataset } = useDataset();
   const api = useApi();
@@ -748,6 +755,24 @@ ${executedQuery}'`;
     }
   };
 
+  // Handle example selection
+  const handleSelectExample = (exampleQuery, example) => {
+    if (exampleQuery) {
+      setQuery(exampleQuery);
+      setSelectedExample(example);
+      // Clear existing variable values when selecting a new example
+      setVariableValues({});
+    } else {
+      setSelectedExample(null);
+      setVariableHints({});
+    }
+  };
+
+  // Handle variable hints from examples
+  const handleVariableHintsChange = (hints) => {
+    setVariableHints(hints);
+  };
+
   // Render tab content based on active tab
   const renderTabContent = () => {
     if (loading) {
@@ -856,10 +881,10 @@ ${executedQuery}'`;
             </div>
           </div>
           
-          <div className="panel-content space-y-6">
+          <div className="panel-content flex flex-col" style={{ height: 'calc(100vh - 116px)' }}>
             {/* Search Tips - Closable */}
             {uiState.searchTipsVisible && (
-              <div className="closable-tip">
+              <div className="closable-tip flex-shrink-0 mb-4">
                 <button
                   onClick={toggleSearchTips}
                   className="tip-close-btn"
@@ -874,78 +899,82 @@ ${executedQuery}'`;
                     <li>• Use <code className="bg-blue-100 px-1 rounded text-xs">{"{{variableName}}"}</code> in query editor for any variable</li>
                     <li>• Field-specific variables: <code className="bg-blue-100 px-1 rounded text-xs">{"{{title}}"}</code>, <code className="bg-blue-100 px-1 rounded text-xs">{"{{category}}"}</code></li>
                     <li>• Date fields: <code className="bg-blue-100 px-1 rounded text-xs">{"{{date:startDate}}"}</code> show calendar icons</li>
-                    <li>• Auto-complete works for field-specific variables</li>
+                    <li>• Select examples from dropdown to learn Elasticsearch concepts</li>
                   </ul>
                 </div>
               </div>
             )}
 
-            {/* Dynamic Variable Inputs - Only shown when variables exist */}
-            {dynamicVariables.length > 0 && (
-              <DynamicVariableInputs
-                variables={dynamicVariables}
-                variableValues={variableValues}
-                onVariableChange={handleVariableChange}
-                onSearch={handleAutocompleteSearch}
-                loading={loading}
-                disabled={!currentDataset}
+            {/* Example Selector - Above Help Text */}
+            <div className="flex-shrink-0 mb-4">
+              <ExampleSelector
+                currentDataset={currentDataset}
+                onSelectExample={handleSelectExample}
+                onVariableHintsChange={handleVariableHintsChange}
               />
-            )}
+            </div>
 
-            {/* Query Editor Section */}
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">
-                  Elasticsearch Query
-                </label>
-                <div className="text-xs text-slate-500 mb-2">
-                  Use <code className="bg-slate-100 px-1 rounded">{"{{variableName}}"}</code> to insert variables.
-                  Examples: <code className="bg-slate-100 px-1 rounded">{"{{title}}"}</code>, <code className="bg-slate-100 px-1 rounded">{"{{category}}"}</code>
-                  <br />
-                  Date fields: <code className="bg-slate-100 px-1 rounded">{"{{date:startDate}}"}</code> or variables containing "date" show calendar icons
-                </div>
-                <QueryEditor
-                  value={query}
-                  onChange={setQuery}
-                  placeholder="Enter your Elasticsearch search query..."
-                  height={250}
-                />
-              </div>
-
-              <div className="flex space-x-2">
-                <button
-                  onClick={handleQueryExecution}
-                  disabled={loading || !currentDataset}
-                  className="btn-primary"
-                >
-                  <Play className="w-4 h-4 mr-2" />
-                  {loading ? 'Executing...' : 'Execute Query'}
-                </button>
+            {/* Help Text */}
+            <div className="flex-shrink-0 mb-3">
+              <div className="text-xs text-slate-500">
+                Use <code className="bg-slate-100 px-1 rounded">{"{{variableName}}"}</code> to insert variables.
+                Examples: <code className="bg-slate-100 px-1 rounded">{"{{title}}"}</code>, <code className="bg-slate-100 px-1 rounded">{"{{category}}"}</code>
+                <br />
+                Date fields: <code className="bg-slate-100 px-1 rounded">{"{{date:startDate}}"}</code> or variables containing "date" show calendar icons
               </div>
             </div>
 
-            {/* Execution Time */}
-            {executionTime && (
-              <div className="flex items-center justify-between p-3 bg-slate-50 rounded-md">
-                <div className="flex items-center space-x-2 text-sm text-slate-600">
-                  <Clock className="w-4 h-4" />
-                  <span>Execution time: {executionTime}ms</span>
+            {/* Scrollable content area */}
+            <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
+              {/* Query Editor Section - Takes available space */}
+              <div className="flex-1 flex flex-col min-h-0 mb-4">
+                <QueryEditor
+                  value={query}
+                  onChange={setQuery}
+                  placeholder="Write your Elasticsearch query here... Use {{variableName}} for dynamic values. Example: {{searchTerm}}, {{category}}, {{date:startDate}}"
+                  height="100%"
+                />
+              </div>
+
+              {/* Bottom section - always visible */}
+              <div className="flex-shrink-0 space-y-4">
+                {/* Dynamic Variable Inputs - Above Execute button */}
+                {dynamicVariables.length > 0 && (
+                  <div>
+                    <DynamicVariableInputs
+                      variables={dynamicVariables}
+                      variableValues={variableValues}
+                      onVariableChange={handleVariableChange}
+                      onSearch={handleAutocompleteSearch}
+                      loading={loading}
+                      disabled={!currentDataset}
+                      autocompleteVariables={[]} // Disabled autocomplete
+                      variableHints={variableHints}
+                    />
+                  </div>
+                )}
+
+                {/* Execute Query Button - Always visible */}
+                <div>
+                  <button
+                    onClick={handleQueryExecution}
+                    disabled={loading || !currentDataset}
+                    className="btn-primary"
+                  >
+                    <Play className="w-4 h-4 mr-2" />
+                    {loading ? 'Executing...' : 'Execute Query'}
+                  </button>
                 </div>
-                {results && (
-                  <span className="text-sm text-slate-600">
-                    {results.total?.value?.toLocaleString() || results.total?.toLocaleString() || 0} results
-                  </span>
+
+                {/* Error Display */}
+                {error && (
+                  <div className="error-alert">
+                    <AlertCircle className="w-5 h-5 mr-2 flex-shrink-0" />
+                    <span>{error}</span>
+                  </div>
                 )}
               </div>
-            )}
-
-            {/* Error Display */}
-            {error && (
-              <div className="error-alert">
-                <AlertCircle className="w-5 h-5 mr-2 flex-shrink-0" />
-                <span>{error}</span>
-              </div>
-            )}
+            </div>
           </div>
         </div>
 
@@ -965,10 +994,9 @@ ${executedQuery}'`;
               <FileText className="w-5 h-5 text-slate-600" />
               <h2 className="panel-title">Search Results</h2>
             </div>
-            {results && (
+            {results && executionTime && (
               <div className="text-sm text-slate-600">
-                {results.total?.value?.toLocaleString() || results.total?.toLocaleString() || 0} results
-                {results.took && ` in ${results.took}ms`}
+                {results.total?.value?.toLocaleString() || results.total?.toLocaleString() || 0} results in {executionTime}ms
               </div>
             )}
           </div>

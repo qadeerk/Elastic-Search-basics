@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Navigation from './components/Navigation';
-import SearchPage from './components/SearchPage';
+import { SearchPage } from './components/search';
 import RecommendPage from './components/RecommendPage';
 import VisualizePage from './components/VisualizePage';
 import { DatasetProvider } from './context/DatasetContext';

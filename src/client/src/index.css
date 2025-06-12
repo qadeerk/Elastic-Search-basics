@@ -30,7 +30,8 @@
 
 @layer components {
   .dev-tool-layout {
-    @apply h-screen flex flex-col bg-slate-100;
+    @apply flex flex-col bg-slate-100;
+    height: calc(100vh - 64px); /* Account for navigation height */
   }
 
   .dev-tool-content {
@@ -166,10 +167,19 @@
 
   .editor-container {
     @apply border border-slate-300 rounded-md overflow-hidden bg-white;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
   }
 
   .editor-header {
     @apply flex items-center justify-between px-3 py-2 bg-slate-50 border-b border-slate-200;
+    flex-shrink: 0;
+  }
+
+  .editor-container > div:last-child {
+    flex: 1;
+    height: 100%;
   }
 
   .editor-label {
@@ -383,6 +393,7 @@
   /* Autocomplete search enhancements */
   .autocomplete-container {
     @apply relative;
+    z-index: 10;
   }
 
   .autocomplete-input {
@@ -390,7 +401,9 @@
   }
 
   .autocomplete-dropdown {
-    @apply absolute top-full left-0 right-0 bg-white border border-slate-200 rounded-b-md shadow-lg z-20 max-h-60 overflow-y-auto;
+    @apply absolute top-full left-0 right-0 bg-white border border-slate-200 rounded-b-md shadow-lg overflow-y-auto;
+    z-index: 1000 !important;
+    max-height: 240px;
   }
 
   .autocomplete-item {
@@ -420,6 +433,83 @@
 
   .empty-state-description {
     @apply text-sm mt-1;
+  }
+
+  /* React DatePicker Custom Styles */
+  .react-datepicker {
+    @apply border border-slate-200 rounded-lg shadow-lg bg-white font-sans;
+    z-index: 9999 !important;
+  }
+
+  .react-datepicker__header {
+    @apply bg-slate-50 border-b border-slate-200 rounded-t-lg;
+  }
+
+  .react-datepicker__current-month {
+    @apply text-slate-700 font-medium text-sm;
+  }
+
+  .react-datepicker__day-name {
+    @apply text-slate-600 text-xs font-medium;
+  }
+
+  .react-datepicker__day {
+    @apply text-slate-700 text-sm hover:bg-blue-50 hover:text-blue-700 rounded;
+  }
+
+  .react-datepicker__day--selected {
+    @apply bg-blue-600 text-white hover:bg-blue-700;
+  }
+
+  .react-datepicker__day--today {
+    @apply bg-blue-100 text-blue-700 font-medium;
+  }
+
+  .react-datepicker__day--outside-month {
+    @apply text-slate-400;
+  }
+
+  .react-datepicker__navigation {
+    @apply top-3;
+  }
+
+  .react-datepicker__navigation--previous {
+    @apply left-3 border-r-4 border-r-slate-400;
+  }
+
+  .react-datepicker__navigation--next {
+    @apply right-3 border-l-4 border-l-slate-400;
+  }
+
+  .react-datepicker__navigation:hover {
+    @apply border-color-slate-600;
+  }
+
+  .react-datepicker__navigation--previous:hover {
+    @apply border-r-slate-600;
+  }
+
+  .react-datepicker__navigation--next:hover {
+    @apply border-l-slate-600;
+  }
+
+  /* Enhanced autocomplete for date fields */
+  .autocomplete-input[readonly] {
+    @apply bg-slate-50 cursor-pointer;
+  }
+
+  .autocomplete-input[readonly]:hover {
+    @apply bg-slate-100;
+  }
+
+  .autocomplete-input[readonly]:focus {
+    @apply bg-white ring-2 ring-blue-500 border-blue-500;
+  }
+
+  /* Fix date picker positioning */
+  .date-picker-portal {
+    position: fixed !important;
+    z-index: 9999 !important;
   }
 }
 

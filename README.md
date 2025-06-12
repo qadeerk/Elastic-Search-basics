@@ -84,7 +84,7 @@ elasticsearch_training_repo/
 1. **Installing Elasticsearch and Kibana via Docker on Windows** (See section 1 above)
 2. **Install Dependencies**
    ```bash
-   npm install
+   npm run install:all
    ```
 
 ### Steps

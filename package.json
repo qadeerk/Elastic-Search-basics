@@ -10,6 +10,7 @@
     "start:client": "cd src/client && npm run dev",
     "dev:server": "cd src/server && npm run dev",
     "dev:client": "cd src/client && npm run dev",
+    "dev": "concurrently --names \"SERVER,CLIENT\" --prefix-colors \"blue,green\" \"npm run dev:server\" \"npm run dev:client\"",
     "install:all": "npm install && cd src/server && npm install && cd ../client && npm install",
     "build:client": "cd src/client && npm run build",
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -33,9 +34,13 @@
   "license": "MIT",
   "dependencies": {
     "@elastic/elasticsearch": "^8.8.2",
-    "inquirer": "^8.2.6",
     "csvtojson": "^2.0.10",
-    "node-fetch": "^2.7.0"
+    "inquirer": "^8.2.6",
+    "node-fetch": "^2.7.0",
+    "react-datepicker": "^8.4.0"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
   },
   "engines": {
     "node": ">=18.0.0"
@@ -48,4 +53,4 @@
     "url": "https://github.com/qadeerk/Elastic-Search-basics/issues"
   },
   "homepage": "https://github.com/qadeerk/Elastic-Search-basics#readme"
-} 
+}
