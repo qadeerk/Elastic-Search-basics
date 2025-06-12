@@ -1,23 +1,4 @@
-export const ecommerceExamples = [
-  {
-    id: 'product_search',
-    title: 'Product Search',
-    description: 'Search products by name or description',
-    query: `{
-  "query": {
-    "multi_match": {
-      "query": "{{searchTerm}}",
-      "fields": ["name^2", "description", "tags"]
-    }
-  },
-  "size": 20
-}`,
-    explanation: 'Multi-field search across product name, description, and tags. Product name matches are boosted 2x for better relevance.',
-    concepts: ['Multi-match query', 'Field boosting', 'Cross-field search'],
-    variableHints: {
-      searchTerm: 'Enter product search terms (e.g., "wireless headphones")'
-    }
-  },
+export const filteringFacets = [
   {
     id: 'price_filter',
     title: 'Price Range Filter',
@@ -138,29 +119,43 @@ export const ecommerceExamples = [
     }
   },
   {
-    id: 'recommendation_similar',
-    title: 'Similar Products (More Like This)',
-    description: 'Find products similar to a given product',
+    id: 'brand_filter',
+    title: 'Brand-Specific Search',
+    description: 'Search products from specific brands',
     query: `{
   "query": {
-    "more_like_this": {
-      "fields": ["name", "description", "tags"],
-      "like": [
+    "bool": {
+      "must": [
         {
-          "_index": "products",
-          "_id": "{{productId}}"
+          "multi_match": {
+            "query": "{{searchTerm}}",
+            "fields": ["name^2", "description"]
+          }
         }
       ],
-      "min_term_freq": 1,
-      "max_query_terms": 12
+      "filter": [
+        {
+          "terms": {
+            "brand.keyword": [{{#brands}}"{{.}}"{{#unless @last}},{{/unless}}{{/brands}}]
+          }
+        }
+      ]
     }
   },
-  "size": 10
+  "aggs": {
+    "brands": {
+      "terms": {
+        "field": "brand.keyword",
+        "size": 20
+      }
+    }
+  }
 }`,
-    explanation: 'Uses More Like This query to find products similar to a reference product. Great for recommendation systems.',
-    concepts: ['More Like This', 'Similarity search', 'Recommendation systems', 'Content-based filtering'],
+    explanation: 'Filters products by specific brands while providing brand facets for UI. Supports multiple brand selection.',
+    concepts: ['Terms filter', 'Multiple selection', 'Brand filtering', 'Faceted navigation'],
     variableHints: {
-      productId: 'Enter product ID for similarity search (e.g., "prod_123")'
+      searchTerm: 'Enter product search (e.g., "shoes")',
+      brands: 'Enter brand names as array (e.g., ["Nike", "Adidas"])'
     }
   }
 ]; 
